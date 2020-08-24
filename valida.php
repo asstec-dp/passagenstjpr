@@ -15,15 +15,16 @@ if($btnLogin){
 		//Gerar a senha criptografa
 		//echo password_hash($senha, PASSWORD_DEFAULT);
 		//Pesquisar o usuário no BD
-		$result_usuario = "SELECT tbl_usuario.id_usuario, tbl_usuario.id_pessoa, tbl_usuario.usuario, tbl_usuario.senha, tbl_pessoa.nome_completo
+		$result_usuario = "SELECT tbl_usuario.id_usuario, tbl_usuario.id_pessoa, tbl_usuario.usuario, tbl_usuario.senha, tbl_pessoa.nome_completo, tbl_pessoa.matricula
 		FROM tbl_pessoa
 		INNER JOIN tbl_usuario ON tbl_pessoa.id_pessoa = tbl_usuario.id_pessoa
 		WHERE usuario = '$usuario' LIMIT 1";
 
-		$resultado_usuario = pg_query($conn, $result_usuario);
+		$resultado_usuario = $conn->prepare($result_usuario);
+		$resultado_usuario->execute();
 		
 		if($resultado_usuario){
-			$row_usuario = pg_fetch_assoc($resultado_usuario);			
+			$row_usuario = $resultado_usuario->fetch(PDO::FETCH_ASSOC);		
 			
 			if(password_verify($senha, $row_usuario['senha'])){
 				$_SESSION['id_usuario'] = $row_usuario['id_usuario'];
@@ -32,20 +33,21 @@ if($btnLogin){
 				$_SESSION['usuario'] = $row_usuario['usuario'];
 				$_SESSION['senha'] = $row_usuario['senha'];
 				$_SESSION['status_usuario'] = $row_usuario['status_usuario'];
+				$_SESSION['matricula'] = $row_usuario['matricula'];
 				
-				header("Location: menu.php");
+				header("Location: inicio.php");
 			}else{
 				$_SESSION['msg'] = "Login ou senha incorreto!";
-				header("Location: inicio.php");
+				header("Location: index.php");
 			}
 		}
 	}else{
 		$_SESSION['msg'] = "Preencha todos os campos!";
-		header("Location: inicio.php");
+		header("Location: index.php");
 	}
 }else{
 	$_SESSION['msg'] = "Página não encontrada";
-	header("Location: inicio.php");
+	header("Location: index.php");
 }
 
 ?>

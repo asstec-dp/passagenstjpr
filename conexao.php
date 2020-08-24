@@ -1,17 +1,20 @@
 <?php
-$servidor = "passagenstjpr.cjspllmwjxzm.us-east-2.rds.amazonaws.com";
-$porta = 5432;
-$bancoDeDados = "dbpassagens";
-$usuario = "postgres";
-$senha = "c0mp4rt1l#31";
+//Credenciais de acesso ao BD
+define('HOST', 'passagenstjpr.cjspllmwjxzm.us-east-2.rds.amazonaws.com');
+define('PORT', 5432);
+define('USER', 'postgres');
+define('PASS', 'c0mp4rt1l#31');
+define('DBNAME', 'dbpassagens');
 
-$conn = pg_connect("host=$servidor port=$porta dbname=$bancoDeDados user=$usuario password=$senha");
+$conn = new PDO('pgsql:host=' . HOST . ';port=' . PORT . ';dbname=' . DBNAME . ';', USER, PASS);
 
+
+/*
 if(!$conn) {
 	die("Não foi possível se conectar ao banco de dados.");
 }
 else{
+   echo "Conectou!!!!";
 }
+*/
 
-
-?>

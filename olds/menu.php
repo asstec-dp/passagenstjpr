@@ -85,35 +85,15 @@
                 </nav>
         </header>
 	<body>
-		<section class="col-md-auto">
-			<div class="content-center">	
-				<div>
-					<a href="https://tjpr.jus.br">
-						<img src="assets/img/tjpr.png" alt="Logo TJPR">
-					</a>
-				</div>
-				<div>
-					<?php						
-						if(!empty($_SESSION['id_usuario'])){
-							echo '<div id="menu">'."Olá ".$_SESSION['nome_completo'].",<br>".'</div>';
-							echo '<div id="menu">'."Bem vindo(a) <br>".'</div>';
-							echo '<div id="menu">'."<a href='sair.php'>Sair</a>".'</div>';
-						}else{
-							$_SESSION['msg'] = "Área restrita";
-							header("Location: index.php");	
-						}
-					?>
-				</div>
-			</div>			
-		</section>
-
+	
+        <footer>
+        <div class="text-center">© Tribunal de Justiça do Estado do Paraná - Sistema de Controle de Passagens  
+            </div>
+        </footer>
 		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
         <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
         <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
 		<script src="assets/css/bootstrap.min.css"></script>		
 	</body>
-	<footer>
-    <div class="text-center">© Tribunal de Justiça do Estado do Paraná - Sistema de Controle de Passagens  
-    </div>
-    </footer>
+
 </html>
