@@ -1,67 +1,39 @@
 <?php
-	
-	session_start();
+session_start();
+include_once './conexao.php';
 
-    ob_start();
-    
-    include_once 'conexao.php';
-	
-	$btnCadContrato = filter_input(INPUT_POST, 'btnCadContrato', FILTER_SANITIZE_STRING);
-	
-	if($btnCadContrato){	
-    
-        $dados = filter_input_array(INPUT_POST, FILTER_DEFAULT);
-        
-        $result_updateContrato = "UPDATE tbl_contrato SET status_contrato = 'vencido' WHERE status_contrato LIKE 'vigente'";
-        $resultado_updateContrato = $conn->prepare($result_updateContrato);
-        $resultado_updateContrato->execute();
-
-        $result_updateItem = "UPDATE tbl_item SET status_item = 'inativo' WHERE status_item LIKE 'ativo'";
-        $resultado_updateItem = $conn->prepare($result_updateItem);
-        $resultado_updateItem->execute();
-
-
-		$result_contrato = "INSERT INTO tbl_contrato (num_contrato, contratada, cnpj, telefone, vigencia, email_contratada, status_contrato)  VALUES (
-		'" .$dados['num_contrato']. "',
-		'" .$dados['contratada']. "',
-		'" .$dados['cnpj']. "',
-		'" .$dados['telefone']. "',
-		'" .$dados['vigencia']. "',
-        '" .$dados['email_contratada']. "',
-        '" .$dados['status_contrato']. "'
-        )";       
-
-        $resultado_contrato = $conn->prepare($result_contrato);
-        $resultado_contrato->execute();
-        
-        header("Location: caditem.php");
-
-		/*if(pg_insert($conn)){
-			$_SESSION['msgcad'] = "Contrato cadastrado com sucesso";
-			header("Location: caditem.php");
-		}else{
-			$_SESSION['msg'] = "Contrato já cadastrado";
-			var_dump($conn);
-            header("Location: caditem.php"); 
-        }*/
-		
-	}
-
+$id_pessoa = filter_input(INPUT_GET, 'id_pessoa', FILTER_SANITIZE_NUMBER_INT);
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
-
     <head>
-        <meta charset="utf-8">
-        <title>Cadastro de Contrato</title>
-        <link rel="shortcut icon" href="assets/img/ico.png" type="image/png">
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        
+        <title>Editar Pessoa</title>
+
+        <link rel="shortcut icon" href="assets/img/icon.png" type="image/png">
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css" integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
         <link rel="stylesheet" href="assets/css/style.css">
         <link rel="stylesheet" href="assets/css/sidebar.css">
         <link rel="stylesheet" href="assets/plugins/fontawesome/css/all.min.css">
     </head>
-    <body>     
+
+    <body>
+        <?php
+            if(isset($_SESSION['msg'])){
+                echo $_SESSION['msg'];
+                unset($_SESSION['msg']);
+            }
+            //SQL para selecionar o registro
+            $result_msg_cont = "SELECT * FROM tbl_pessoa WHERE id_pessoa=$id_pessoa";
+            
+            //Seleciona os registros
+            $resultado_msg_cont = $conn->prepare($result_msg_cont);
+            $resultado_msg_cont->execute();
+            $row_msg_cont = $resultado_msg_cont->fetch(PDO::FETCH_ASSOC); 
+        
+        ?>
         <header>
             <nav class="navbar fixed-top navbar-expand-md navbar-dark">
                 <div class="header">
@@ -175,7 +147,7 @@
                                 </a>
                                 <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                     <a class="dropdown-item" href="consultar_viagem.php">Viagem</a>
-                                    <a class="dropdown-item" href="consulta_passagem.php">Passagem</a>
+                                    <a class="dropdown-item" href="consulpassagem.php">Passagem</a>
                                     <a class="dropdown-item" href="cadpessoa.php">Passageiro</a>
                                     <a class="dropdown-item" href="consulta_pagamento.php">Pagamento</a>
                                 </div>
@@ -222,86 +194,82 @@
                 </div>
             </nav>
         </header>
+        
         <section class="col-md-auto">	
             <div class="content-center" id="conteiner">
-                <?php
-                    if(isset($_SESSION['msg'])){
-                        echo $_SESSION['msg'];
-                        unset($_SESSION['msg']);
-                    }
+                <form method="POST" action="proc_edit_pessoa.php">
+                    <h1>Editar Pessoa</h1>
+                    <input type="hidden" name="id_pessoa" value="<?php if(isset($row_msg_cont['id_pessoa'])){ echo $row_msg_cont['id_pessoa']; } ?>">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <label id="date-side" for="nome_completo">Nome Completo</label>
+                            <input type="text" class="form-control" name="nome_completo" placeholder="Inserir o nome completo" id="nome_completo"  maxlength="100" value="<?php if(isset($row_msg_cont['nome_completo'])){ echo $row_msg_cont['nome_completo']; } ?>">
+                        </div>
+                        <!-- Início Select Cargos -->
+                        <div class="col-md-4">
+                            <label id="date-side" for="cargo">Cargo</label>
+                            <select class="custom-select" name="cargo" id="cargo">
+                                <option selected><?php if(isset($row_msg_cont['cargo'])){ echo $row_msg_cont['cargo']; } ?></option>
+                                <option name="cargo" value="Desembargador">Desembargador</option>
+                                <option name="cargo" value="Juiz">Juiz</option>
+                                <option name="cargo" value="Servidor">Servidor</option>
+                                <option name="cargo" value="Estagiário">Estagiário</option>
+                                <option name="cargo" value="Externo">Externo</option>
+                            </select>  
+                        </div> 
+                    </div> 
 
-                    if(isset($_SESSION['msgcad'])){
-                        echo $_SESSION['msgcad'];
-                        unset($_SESSION['msgcad']);
-                    }
-                ?>                                    
-                <form method="POST" action="">
-                <!-- Inicio Campos -->
-                    <h1>&nbsp Contrato</h1>
                     <div class="row">
+                        <div class="col-md-5 ">
+                            <label id="date-side" for="cpf">C.P.F.</label>   
+                            <input type="text" class="cpf form-control" name="cpf" id="cpf" required="required" data-mask="000.000.000-00" data-mask-selectonfocus="true" value="<?php if(isset($row_msg_cont['cpf'])){ echo $row_msg_cont['cpf']; } ?>">
+                        </div>
+                        
+                        <div class="col-md-4">
+                            <label id="date-side" for="rg">R.G.</label> 
+                            <input type="text" name="rg" maxlength="14"  placeholder="C. P. F" value="<?php if(isset($row_msg_cont['rg'])){ echo $row_msg_cont['rg']; } ?>">
+                        </div>
+
                         <div class="col-md-3">
-                            <label id="date-side" for="num_contrato">Número do Contrato</label>
-                            <input type="text" class="form-control" name="num_contrato" id="num_contrato" required="required">
-                        </div>                          
+                            <label id="date-side" for="data_nascimento">Data de Nascimento</label>
+                            <input type="date" name="data_nascimento" value="<?php if(isset($row_msg_cont['data_nascimento'])){ echo $row_msg_cont['data_nascimento']; } ?>">
+                        </div>
+                    </div>
+                    <div class= "row">
+                        <div class="col-md-5">
+                            <label id="date-side" for="email_pessoa">Email</label>
+                            <input type="email" name="email_pessoa" placeholder="Seu melhor e-mail" id="email_pessoa" value="<?php if(isset($row_msg_cont['email_pessoa'])){ echo $row_msg_cont['email_pessoa']; } ?>">
+                        </div>
+
+                        <div class="col-md-4">
+                            <label id="date-side" for="matricula">Matrícula</label>
+                            <input type="text" name="matricula" placeholder="Inserir a matricula" id="matricula" value="<?php if(isset($row_msg_cont['matricula'])){ echo $row_msg_cont['matricula']; } ?>">
+                        </div>
                         <div class="col-md-3">
-                            <label id="date-side" for="vigencia">Vigência</label>
-                            <input type="date" class="form-control" name="vigencia" id="date-side" required="required">
-                        </div>
-                        <div class="col-md-6">
-                            <label id="date-side" for="contratada">Nome da Empresa</label>
-                            <input type="text" class="form-control" name="contratada" id="contratada" required="required">
+                            <label id="date-side" for="passaporte">Passaporte</label>
+                            <input type="text" name="passaporte" placeholder="Passaporte" id="passaporte" value="<?php if(isset($row_msg_cont['passaporte'])){ echo $row_msg_cont['passaporte']; } ?>">
                         </div>
                     </div>
-                    <div class="row">
-                        <div class="col-md-4">
-                            <label id="date-side" for="cnpj">CNPJ</label>
-                            <input type="text" class="form-control" name="cnpj" id="cnpj" required="required" data-mask="00.000.000/0000-00" data-mask-selectonfocus="true">
-                        </div>
-                        <div class="col-md-4">
-                            <label id="date-side" for="email_contratada">E-mail</label>
-                            <input type="email" class="form-control" name="email_contratada" id="email_contratada" required="required">
-                        </div>
-                        <div class="col-md-4">
-                            <label id="date-side" for="telefone">Telefone</label>
-                            <input type="text" class="telefone form-control" name="telefone" id="telefone" data-mask="(00) 0000-0000" data-mask-selectonfocus="true"/>
-                        </div>
-                    </div>
-                        <div class="row">
-                        <div class="col-md-6">
-                            <input type="submit" onclick="return checkSubmission()" value="Salvar" name="btnCadContrato"></input>     
-                        </div>
-                        <div class="col-md-6">
-                            <input type ="submit" value ="Cancelar"></input>
-                        </div>
-                    </div>
-                    <input type="hidden" class="form-control" name="status_contrato" id="status_contrato" value="vigente">
-                <!-- Fim Campos -->    
-                </form>                                          
+                    <div class="col-md-3">
+                        <label id="date-side" name="passaporte" for="passaporte">Status:</label>
+                        <input type="text" name="status_pessoa" placeholder="Status" value="<?php if(isset($row_msg_cont['status_pessoa'])){ echo $row_msg_cont['status_pessoa']; } ?>"> 
+                    </div>     
+                    <input name="SendEditCont" type="submit" value="Editar">
+                
+                </form>
             </div>
         </section>
         <footer>
             <div class="footer">©️ Tribunal de Justiça do Estado do Paraná - Sistema de Controle de Passagens  
             </div>
         </footer>
-        <!-- Verificar se o ja aconteceu um 'submit' -->
-        <script>
-            var submissionflag = false;
-            function checkSubmission()
-            {
-                if (!submissionflag) {
-                    submissionflag= true;
-                    document.getElementById("btnsave").disabled = true;
-                    return true;
-                }else {
-                    return false;
-                }
-            }
-        </script>
-            <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
-            <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
-            <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
-            <script src="assets/css/bootstrap.min.css"></script>
-            <script src="assets/js/jquery.mask.min.js"></script>
+       <!-- Verificar se o ja aconteceu um 'submit' -->
+       
+		<script src="https://code.jquery.com/jquery-3.5.1.slim.min.js" integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous"></script>
+        <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js" integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js" integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous"></script>
+		<script src="assets/css/bootstrap.min.css"></script>
+        <script src="assets/js/jquery.mask.min.js"></script>
+        
     </body>
-
 </html>

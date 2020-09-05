@@ -6,5 +6,3 @@ $resultado = pg_query ($conn, "SELECT nome_completo FROM tbl_pessoa ORDER BY nom
 while ($row = pg_fetch_array($resultado))
 
     echo $row;
-
-?>

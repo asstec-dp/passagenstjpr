@@ -6,61 +6,47 @@ ob_start();
 
 include_once 'conexao.php';
 
-$btnCadPassagem = filter_input(INPUT_POST, 'btnCadPassagem', FILTER_SANITIZE_STRING);
+$btnCadCidade = filter_input(INPUT_POST, 'btnCadCidade', FILTER_SANITIZE_STRING);
 
-
-if ($btnCadPassagem) {
+if ($btnCadCidade) {
 
     $dados = filter_input_array(INPUT_POST, FILTER_DEFAULT);
     //var_dump($dados);
     //$dados['senha'] = password_hash($dados['senha'], PASSWORD_DEFAULT);
 
-    $result_passagem = "INSERT INTO tbl_passagem (id_viagem, id_pessoa, id_item, origem, destino, data_ida, data_retorno, companhia, localizador, tarifa_voucher, taxas_voucher, classe, status_passagem, id_contrato, id_usuario, unidade, grau)VALUES (
-		'" . $dados['id_viagem'] . "',
-		'" . $dados['id_pessoa'] . "',
-		'" . $dados['id_item'] . "',
+    $result_cidade = "INSERT INTO tbl_cidade (origem, destino)VALUES (
 		'" . $dados['origem'] . "',
-        '" . $dados['destino'] . "',
-        '" . $dados['data_ida'] . "',
-        '" . $dados['data_retorno'] . "',
-        '" . $dados['companhia'] . "',
-        '" . $dados['localizador'] . "',
-        '" . $dados['tarifa_voucher'] . "',
-        '" . $dados['taxas_voucher'] . "',
-        '" . $dados['classe'] . "',
-        '" . $dados['status_passagem'] . "',
-        '" . $dados['id_contrato'] . "',
-        '" . $_SESSION['id_usuario'] . "',
-        '" . $_SESSION['unidade'] . "',
-        '" . $dados['grau'] . "'
+        '" . $dados['origem'] . "'
 		)";
 
 
-    $resultado_passagem = $conn->prepare($result_passagem);
-    $resultado_passagem->execute();
+    $resultado_cidade = $conn->prepare($result_cidade);
+    $resultado_cidade->execute();
 
-    header("Location: cadpassagem.php");
+    header("Location: menu.php");
+    /*
+		if(pg_insert($conn)){
+			$_SESSION['msgcad'] = "Contrato cadastrado com sucesso";
+			header("Location: menu.php");
+		}else{
+			$_SESSION['msg'] = "Contrato já cadastrado";
+			var_dump($conn);
+            header("Location: cadcidade.php"); 
+        }*/
 }
 
-/*if(pg_insert($conn)){
-                            $_SESSION['msgcad'] = "Passagem cadastrada com sucesso";
-                            header("Location: cadpassagem.php");
-                        }else{
-                            $_SESSION['msg'] = "Passagem já cadastrado";
-                            var_dump($conn);
-                            header("Location: cadpassagem.php"); 
-                        }*/
-
+if (isset($_POST['cancel'])) {
+    header("location: menu.php");
+}
 
 ?>
 
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro de Passagem</title>
+    <meta charset="utf-8">
+    <title>CADASTRO DE CIDADE</title>
 
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
     <script src="https://code.jquery.com/jquery-3.5.1.min.js"
@@ -72,6 +58,7 @@ if ($btnCadPassagem) {
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/sidebar.css">
     <link rel="stylesheet" href="assets/plugins/fontawesome/css/all.min.css">
+
 </head>
 
 <body>
@@ -238,7 +225,7 @@ if ($btnCadPassagem) {
         </nav>
     </header>
     <section class="col-md-auto">
-        <div class="content-center" id="conteiner">
+        <div class="content-center">
             <?php
             if (isset($_SESSION['msg'])) {
                 echo $_SESSION['msg'];
@@ -251,123 +238,15 @@ if ($btnCadPassagem) {
             }
             ?>
 
-            <form method="GET" action="confirma_passagem.php">
 
-                <h1>Passagem</h1>
-
-                <div class="row">
-                    <!-- Select Viagem -->
-                    <div class="col-md-3">
-                        <?php
-                        $result_viagem = "SELECT id_viagem, protocolo_compra FROM tbl_viagem
-                                        ORDER BY id_viagem DESC";
-
-                        $resultado_viagem = $conn->prepare($result_viagem);
-                        $resultado_viagem->execute();
-
-                        echo
-                            '<label id="date-side" for="id_viagem">Protocolo da Viagem</label>
-                                        <select class="custom-select" name="id_viagem" id="id_viagem" required="required">
-                                        <option selected="selected" disabled>Pesquisar</option>';
-                        while ($row_viagem = $resultado_viagem->fetch(PDO::FETCH_ASSOC)) {
-
-                            echo '<option value="' . $row_viagem['id_viagem'] . '">' . $row_viagem['protocolo_compra'] . '</option>';
-                        }
-                        echo '</select>';
-
-                        ?>
-                    </div>
-                    <!-- Select Passageiro -->
-                    <div class="col-md-9">
-                        <?php
-                        $result_pessoa = "SELECT id_pessoa, nome_completo
-                                        FROM tbl_pessoa
-                                        ORDER BY nome_completo ASC";
-
-                        $resultado_pessoa = $conn->prepare($result_pessoa);
-                        $resultado_pessoa->execute();
-
-                        echo
-                            '<label id="date-side" for="id_pessoa">Passageiro</label>
-                                        <select class="custom-select" name="id_pessoa" id="id_pessoa" required="required">
-                                        <option selected="selected" disabled>Pesquisar</option>';
-                        while ($row_pessoa = $resultado_pessoa->fetch(PDO::FETCH_ASSOC)) {
-
-                            echo '<option value="' . $row_pessoa['id_pessoa'] . '">' . $row_pessoa['nome_completo'] . '</option>';
-                        }
-                        echo '</select>';
-
-                        ?>
-                    </div>
-                </div>
-                <div class="row">
-                    <!-- Início Select Grau -->
-                    <div class="col-md-3">
-                        <label id="date-side" for="grau">Grau</label>
-                        <select class="custom-select" name="grau" id="inlineFormCustomSelectPref">
-                            <option selected enabled name="grau" value="2º">2º Grau</option>
-                            <option name="grau" value="1º">1º Grau</option>
-                        </select>
-                    </div>
-                    <!-- Select Contrato -->
-                    <div class="col-md-3">
-                        <?php
-                        $result_contrato = "SELECT id_contrato, num_contrato
-                                        FROM tbl_contrato
-                                        WHERE tbl_contrato.status_contrato LIKE 'vigente'
-                                        ORDER BY id_contrato";
-
-                        $resultado_contrato = $conn->prepare($result_contrato);
-                        $resultado_contrato->execute();
-
-                        echo
-                            '<label id="date-side" for="id_contrato">Contrato</label>
-                                        <select class="custom-select" name="id_contrato" id="id_contrato">
-                                        <option disabled>Selecione</option>';
-                        while ($row_contrato = $resultado_contrato->fetch(PDO::FETCH_ASSOC)) {
-
-                            echo '<option selected="selected"  value="' . $row_contrato['id_contrato'] . '">' . $row_contrato['num_contrato'] . '</option>';
-                        }
-                        echo '</select>';
-
-                        ?>
-                    </div>
-                    <!-- Select Item -->
-                    <div class="col-md-3">
-                        <?php
-                        $result_item = "SELECT id_item, descricao
-                                        FROM tbl_item
-                                        WHERE tbl_item.status_item LIKE 'ativo'
-                                        ORDER BY id_item";
-
-                        $resultado_item = $conn->prepare($result_item);
-                        $resultado_item->execute();
-
-                        echo
-                            '<label id="date-side" for="id_item">Tipo</label>
-                                        <select class="custom-select" name="id_item" id="id_item">
-                                        <option selected="selected" disabled>Selecionar</option>';
-                        while ($row_item = $resultado_item->fetch(PDO::FETCH_ASSOC)) {
-
-                            echo '<option value="' . $row_item['id_item'] . '">' . $row_item['descricao'] . '</option>';
-                        }
-                        echo '</select>';
-
-                        ?>
-                    </div>
-                    <div class="col-md-3">
-                        <label id="date-side" for="classe">Classe</label>
-                        <select class="custom-select" name="classe" id="classe">
-                            <option value="normal" selected enabled>Normal</option>
-                            <option value="cúpula">Cúpula</option>
-                        </select>
-                    </div>
-                </div>
+            <form method="POST" action="">
+                <!-- Inicio Campos -->
+                <h3>Cadastrar Cidade</h3>
                 <div class="row">
                     <!-- Select Origem -->
-                    <div class="col-md-3">
+                    <div class="col-md-12">
                         <?php
-                        $result_cidade = "SELECT origem, destino
+                        $result_cidade = "SELECT origem
                                         FROM tbl_cidade
                                         ORDER BY origem ASC";
 
@@ -375,9 +254,9 @@ if ($btnCadPassagem) {
                         $resultado_cidade->execute();
 
                         echo
-                            '<label id="date-side" for="origem">Origem</label>
-                                        <select class="custom-select" name="origem" id="origem" required="required">
-                                        <option selected="selected" disabled>Pesquisar</option>';
+                            '<label id="date-side" for="origem">Certifique-se de que a cidade não está cadastrada. </label>
+                                        <select class="custom-select" name="origem" id="origem">
+                                        <option selected="selected">Pesquisar</option>';
                         while ($row_origem = $resultado_cidade->fetch(PDO::FETCH_ASSOC)) {
 
                             echo '<option name="origem" value="' . $row_origem['origem'] . '">' . $row_origem['origem'] . '</option>';
@@ -386,66 +265,25 @@ if ($btnCadPassagem) {
 
                         ?>
                     </div>
-                    <div class="col-md-3">
-                        <label id="date-side" for="data_ida">Data de Ida</label>
-                        <input type="date" class="form-control" name="data_ida" id="data_ida" required="required">
-                    </div>
-                    <div class="col-md-3">
-                        <?php
-                        $resultado_cidade = $conn->prepare($result_cidade);
-                        $resultado_cidade->execute();
-                        echo
-                            '<label id="date-side" for="destino">Destino</label>
-                                        <select class="custom-select" name="destino" id="destino" required="required">
-                                        <option selected="selected">Pesquisar</option>';
-                        while ($row_destino = $resultado_cidade->fetch(PDO::FETCH_ASSOC)) {
+                    <div class="col-md-12">
 
-                            echo '<option value="' . $row_destino['destino'] . '">' . $row_destino['destino'] . '</option>';
-                        }
-                        echo '</select>';
-
-                        ?>
-                    </div>
-                    <div class="col-md-3">
-                        <label id="date-side" for="data_retorno">Data de Retorno</label>
-                        <input type="date" class="form-control" name="data_retorno" id="data_retorno">
+                        <label id="date-side" for="origem">Digite</label>
+                        <input type="text" class="form-control" name="origem" id="origem" placeholder="Cidade - UF"
+                            required>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-md-3 ">
-                        <label id="date-side" for="tarifa_voucher">Passagem / Seguro R$</label>
-                        <input type="number" min="0.01" step="0.01" class="form-control" name="tarifa_voucher"
-                            id="tarifa_voucher" required="required">
+                    <div class="col-md-6">
+                        <input type="submit" onclick="return checkSubmission()" type="submit" id="btnCadCidade"
+                            value="Salvar" name="btnCadCidade"></input>
                     </div>
-                    <div class="col-md-3 ">
-                        <label id="date-side" for="taxas_voucher">Taxas R$</label>
-                        <input type="number" min="0.00" step="0.00" class="form-control" name="taxas_voucher"
-                            id="taxas_voucher" required="required">
-                    </div>
-                    <div class="col-md-3">
-                        <label id="date-side" for="companhia">Companhia / Seguradora</label>
-                        <input type="text" class="form-control" name="companhia" id="companhia" maxlength="48"
-                            required="required">
-                    </div>
-                    <div class="col-md-3">
-                        <label id="date-side" for="localizador">Localizador / Apólice</label>
-                        <input type="text" class="form-control" name="localizador" id="localizador" maxlength="15"
-                            required="required">
+                    <div class="col-md-6">
+                        <form method="post">
+                            <input type="submit" name="cancel" value="Cancelar" formnovalidate></input>
+                        </form>
                     </div>
                 </div>
-                <div class="row">
-                    <div class="col-md-4">
-                        <input type="submit" onclick="return checkSubmission()" id="btnCadPassagem" value="Salvar"
-                            name="btnCadPassagem"></input>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="submit" id="btnCadpessoa" value="Cadastrar Passageiro"></input>
-                    </div>
-                    <div class="col-md-4">
-                        <input type="submit" id="btnConcluir" href="menu.php" value="Concluir"></input>
-                    </div>
-                    <input type="hidden" class="form-control" name="status_passagem" id="status_passagem" value="ativo">
-                    <!-- Fim Campos -->
+                <!-- Fim Campos -->
             </form>
         </div>
     </section>
@@ -467,15 +305,6 @@ if ($btnCadPassagem) {
         }
     }
     </script>
-    <script>
-    $(document).ready(function() {
-        $('#id_pessoa').select2();
-        $('#id_viagem').select2();
-        $('#origem').select2();
-        $('#destino').select2();
-    });
-    </script>
-
     <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
         integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
     </script>
@@ -483,9 +312,12 @@ if ($btnCadPassagem) {
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous">
     </script>
     <script src="assets/css/bootstrap.min.css"></script>
-    <script src="assets/js/jquery.mask.min.js"></script>
 
-
+    <script>
+    $(document).ready(function() {
+        $('#origem').select2();
+    });
+    </script>
 </body>
 
 </html>

@@ -1,68 +1,14 @@
 <?php
 session_start();
-
-ob_start();
-
-include_once 'conexao.php';
-
-$btnCadItem = filter_input(INPUT_POST, 'btnCadItem', FILTER_SANITIZE_STRING);
-
-if ($btnCadItem) {
-
-    $dados = filter_input_array(INPUT_POST, FILTER_DEFAULT);
-
-    if (empty($dados['desconto_valor'])) {
-        $dados['desconto_valor'] = 0.00;
-    }
-    if (empty($dados['comissao_valor'])) {
-        $dados['comissao_valor'] = 0.00;
-    }
-    if (empty($dados['desconto_percentual'])) {
-        $dados['desconto_percentual'] = 0.00;
-    }
-    if (empty($dados['comissao_percentual'])) {
-        $dados['comissao_percentual'] = 0.00;
-    }
-
-
-    $result_item = "INSERT INTO tbl_item (id_contrato, descricao, valor_contratado, desconto_valor, comissao_valor, desconto_percentual, comissao_percentual, status_item) VALUES (
-		'" . $dados['id_contrato'] . "',
-		'" . $dados['descricao'] . "',
-		'" . $dados['valor_contratado'] . "',
-		'" . $dados['desconto_valor'] . "',
-		'" . $dados['comissao_valor'] . "',
-        '" . $dados['desconto_percentual'] . "',
-        '" . $dados['comissao_percentual'] . "',
-        '" . $dados['status_item'] . "'
-		)";
-
-
-    $resultado_item = $conn->prepare($result_item);
-    $resultado_item->execute();
-
-    header("Location: caditem.php");
-
-    /*if(pg_insert($conn)){
-			$_SESSION['msgcad'] = "Item cadastrado com sucesso";
-			header("Location: caditem.php");
-		}else{
-			$_SESSION['msg'] = "Contrato já cadastrado";
-			var_dump($conn);
-            header("Location: caditem.php"); */
-}
-
-
-
+include 'conexao.php';
 ?>
-
 <!DOCTYPE html>
 <html lang="pt-br">
 
 <head>
     <meta charset="utf-8">
-    <title>Cadastro de Itens</title>
+    <title>Pesquisa de Passageiros</title>
     <link rel="shortcut icon" href="assets/img/icon.png" type="image/png">
-
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
         integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/css/style.css">
@@ -186,7 +132,7 @@ if ($btnCadItem) {
                             </a>
                             <div class="dropdown-menu" aria-labelledby="navbarDropdown">
                                 <a class="dropdown-item" href="consultar_viagem.php">Viagem</a>
-                                <a class="dropdown-item" href="consulta_passagem.php">Passagem</a>
+                                <a class="dropdown-item" href="consulpassagem.php">Passagem</a>
                                 <a class="dropdown-item" href="cadpessoa.php">Passageiro</a>
                                 <a class="dropdown-item" href="consulta_pagamento.php">Pagamento</a>
                             </div>
@@ -233,131 +179,100 @@ if ($btnCadItem) {
             </div>
         </nav>
     </header>
+    <?php
+        if(isset($_SESSION['msg'])){
+            echo $_SESSION['msg'];
+            unset($_SESSION['msg']);
+        }
+    ?>    
     <section class="col-md-auto">
         <div class="content-center" id="conteiner">
-            <?php
-            if (isset($_SESSION['msg'])) {
-                echo $_SESSION['msg'];
-                unset($_SESSION['msg']);
-            }
-            ?>
-
-            <form method="POST" action="">
-                <!-- Inicio Campos -->
-                <h1>&nbsp Item de Contrato</h1>
+            <form method="post">
                 <div class="row">
-                    <!-- Select Contrato -->
-                    <div class="col-md-3">
-                        <?php
-
-                        $result_contrato = "SELECT * FROM tbl_contrato
-                                                        WHERE status_contrato LIKE 'vigente'
-                                                        ORDER BY id_contrato";
-
-                        $resultado_contrato = $conn->prepare($result_contrato);
-                        $resultado_contrato->execute();
-
-
-
-                        echo '<label id="date-side" for="contrato">Contrato</label><select class="custom-select" name="id_contrato" id="id_contrato">
-                                        <option value="id_contrato" disabled">Selecione</option>';
-
-                        while ($row_contrato = $resultado_contrato->fetch(PDO::FETCH_ASSOC)) {
-                            echo '<option selected="selected value="' . $row_contrato['id_contrato'] . '">' . $row_contrato['num_contrato'] . '</option>';
-                        }
-                        echo '</select>';
-                        ?>
-                    </div>
-                    <div class="col-md-6">
-                        <label id="date-side" for="descricao">Descrição</label>
-                        <select class="custom-select" name="descricao" id="inlineFormCustomSelectPref"
-                            required="required">
-                            <option selected disabled>Selecione</option>
-                            <option name="descricao" value="Passagem Aérea Nacional">Passagem Aérea Nacional</option>
-                            <option name="descricao" value="Passagem Aérea Internacional">Passagem Aérea Internacional
-                            </option>
-                            <option name="descricao" value="Passagem Rodoviária Nacional">Passagem Rodoviária Nacional
-                            </option>
-                            <option name="descricao" value="Seguro Viagem Internacional">Seguro Viagem Internacional
-                            </option>
-
+                    <div class="col-md-2">
+                        <label>Tipo de Pesquisa</label>
+                        <select class="custom-select" name="tipo">
+                            <option value="Nome">Nome</option>
+                            <option value="CPF">CPF</option>
                         </select>
                     </div>
-
-                    <div class="col-md-3 ">
-                        <label id="date-side" for="valor_contratado">Valor Total</label>
-                        <input type="text" min="" step="any" class="form-control" name="valor_contratado"
-                            id="valor_contratado" placeholder="0.00" required="required">
+                    <div class="col-md-7">
+                        <label>Pesquisa</label>
+                        <input type="text" name="valor" placeholder="">
                     </div>
-
+                    <div class="col-md-3">
+                        <input type="submit" name="search" value="Pesquisar"></input>
+                    <div>
                 </div>
-                <div class="row">
-
-                    <div class="col-md-3 ">
-                        <label id="date-side">Desconto em Valor Monetário R$</label>
-                        <input type="text" min="" step="any" class="form-control" name="desconto_valor"
-                            id="desconto_valor" placeholder="0.00" required="required">
-                    </div>
-
-                    <div class="col-md-3 ">
-                        <label id="date-side">Desconto em Percentual %</label>
-                        <input type="text" min="" max="100" step="any" class="form-control" name="desconto_percentual"
-                            id="desconto_percentual" placeholder="0.00" required="required">
-                    </div>
-                    <div class="col-md-3 ">
-                        <label id="date-side">Comissão em Valor Monetário R$</label>
-                        <input type="text" min="" step="any" class="form-control" name="comissao_valor"
-                            id="comissao_valor" placeholder="0.00" required="required">
-                    </div>
-
-                    <div class="col-md-3 ">
-                        <label id="date-side">Comissão em Percentual %</label>
-                        <input type="text" min="" max="100" step="any" class="form-control" name="comissao_percentual"
-                            id="comissao_percentual" placeholder="0.00" required="required">
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4">
-                        <input type="submit" onclick="return checkSubmission()" id="btnCadItem" value="Salvar"
-                            name="btnCadItem"></input>
-                    </div>
-
-                    <div class="col-md-4">
-                        <input type="submit" name="btnCancela" id="btnCancela" value="Cancelar"></input>
-                    </div>
-
-                    <div class="col-md-4">
-                        <input type="submit" id="btnConcluir" value="Concluir"></input>
-                    </div>
-
-                </div>
-                <input type="hidden" class="form-control" name="status_item" id="status_item" value="ativo">
-                <!-- Fim Campos -->
             </form>
+            <br><br>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <?php
 
-        </div>
-        </div>
+                if (isset($_POST['search'])) {
+
+                    $valor = $_POST['valor'];
+
+                    if ($_POST['tipo']  == "Nome") {
+                        if (strlen($valor) < 2) {
+                            $result_pessoa = null;
+                            echo "<script>alert('Digite um valor.');</script>";
+                        } else {
+                            $result_pessoa = "SELECT * FROM tbl_pessoa 
+                                                    WHERE nome_completo ILIKE '%{$valor}%'
+                                                    ORDER BY nome_completo";
+                        }
+                    } else if ($_POST['tipo']  == "CPF") {
+                        $result_pessoa = "SELECT * FROM tbl_pessoa 
+                                                WHERE cpf = '$valor'
+                                                ORDER BY nome_completo";
+                    }
+
+                    $resultado_pessoa = $conn->prepare($result_pessoa);
+                    $resultado_pessoa->execute();
+
+                    if ($resultado_pessoa->rowCount() > 0) {
+                        echo '
+                            <table class="table table-striped">
+                            <tr>
+                                <th style="text-align: center">Nome</th>
+                                <th style="text-align: center">CPF</th>
+                                <th style="text-align: center">E-mail</th>
+                                <th style="text-align: center">Cargo</th>
+                                <th style="text-align: center">Situação</th>
+                                <th style="text-align: center"> </th>
+                            </tr>';
+
+                        while ($row_pessoa = $resultado_pessoa->fetch(PDO::FETCH_ASSOC)) {
+                           echo '
+                            <tr>
+                            <form method="GET" action="editar_pessoa.php">
+                                <td style="text-align: center" name="nome_completo">' . $row_pessoa['nome_completo'].'</td>
+                                <td style="text-align: center" name="cpf">' . $row_pessoa['cpf'].'</td>
+                                <td style="text-align: center" name="E-mail">'.$row_pessoa['email_pessoa'].'</td>
+                                <td style="text-align: center" name="cargo">' . $row_pessoa['cargo'].'</td>
+                                <td style="text-align: center" name="status_pessoa">' . $row_pessoa['status_pessoa'].'</td>
+                                <td>
+                                    <strong><a style="color:#123141" href="editar_pessoa.php?id_pessoa='.$row_pessoa['id_pessoa'].'">Editar</a></strong>
+                                </td>
+                            </form>
+                            </tr>';                        
+                        }
+
+                        echo '
+                        </table>';
+                    }
+                }
+                ?>
+            </div>
         </div>
     </section>
     <footer>
         <div class="footer">©️ Tribunal de Justiça do Estado do Paraná - Sistema de Controle de Passagens
         </div>
     </footer>
-    <!-- Verificar se o ja aconteceu um 'submit' -->
-    <script>
-    var submissionflag = false;
-
-    function checkSubmission() {
-        if (!submissionflag) {
-            submissionflag = true;
-            document.getElementById("btnsave").disabled = true;
-            return true;
-        } else {
-            return false;
-        }
-    }
-    </script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous">
     </script>
@@ -368,7 +283,6 @@ if ($btnCadItem) {
         integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous">
     </script>
     <script src="assets/css/bootstrap.min.css"></script>
-    <script src="assets/js/jquery.mask.min.js"></script>
 </body>
 
 </html>

@@ -1,68 +1,40 @@
 <?php
+
 session_start();
 
 ob_start();
 
 include_once 'conexao.php';
 
-$btnCadItem = filter_input(INPUT_POST, 'btnCadItem', FILTER_SANITIZE_STRING);
 
-if ($btnCadItem) {
+$resultultimo = "SELECT MAX(id_passagem) AS id_passagem FROM tbl_passagem INNER JOIN tbl_viagem
+    ON tbl_passagem.id_viagem = tbl_viagem.id_viagem";
+$resultado_ultimo = $conn->prepare($resultultimo);
+$resultado_ultimo->execute();
 
-    $dados = filter_input_array(INPUT_POST, FILTER_DEFAULT);
+while ($row_passagem = $resultado_ultimo->fetch(PDO::FETCH_ASSOC)) {
 
-    if (empty($dados['desconto_valor'])) {
-        $dados['desconto_valor'] = 0.00;
-    }
-    if (empty($dados['comissao_valor'])) {
-        $dados['comissao_valor'] = 0.00;
-    }
-    if (empty($dados['desconto_percentual'])) {
-        $dados['desconto_percentual'] = 0.00;
-    }
-    if (empty($dados['comissao_percentual'])) {
-        $dados['comissao_percentual'] = 0.00;
-    }
-
-
-    $result_item = "INSERT INTO tbl_item (id_contrato, descricao, valor_contratado, desconto_valor, comissao_valor, desconto_percentual, comissao_percentual, status_item) VALUES (
-		'" . $dados['id_contrato'] . "',
-		'" . $dados['descricao'] . "',
-		'" . $dados['valor_contratado'] . "',
-		'" . $dados['desconto_valor'] . "',
-		'" . $dados['comissao_valor'] . "',
-        '" . $dados['desconto_percentual'] . "',
-        '" . $dados['comissao_percentual'] . "',
-        '" . $dados['status_item'] . "'
-		)";
-
-
-    $resultado_item = $conn->prepare($result_item);
-    $resultado_item->execute();
-
-    header("Location: caditem.php");
-
-    /*if(pg_insert($conn)){
-			$_SESSION['msgcad'] = "Item cadastrado com sucesso";
-			header("Location: caditem.php");
-		}else{
-			$_SESSION['msg'] = "Contrato já cadastrado";
-			var_dump($conn);
-            header("Location: caditem.php"); */
+    $viagem = $row_passagem['id_viagem'];
 }
-
-
 
 ?>
 
+
+
+
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>Cadastro de Itens</title>
-    <link rel="shortcut icon" href="assets/img/icon.png" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cofirmar Passagem</title>
 
+    <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/css/select2.min.css" rel="stylesheet" />
+    <script src="https://code.jquery.com/jquery-3.5.1.min.js"
+        integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-beta.1/dist/js/select2.min.js"></script>
+    <link rel="shortcut icon" href="assets/img/icon.png" type="image/png">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
         integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/css/style.css">
@@ -235,140 +207,73 @@ if ($btnCadItem) {
     </header>
     <section class="col-md-auto">
         <div class="content-center" id="conteiner">
-            <?php
-            if (isset($_SESSION['msg'])) {
-                echo $_SESSION['msg'];
-                unset($_SESSION['msg']);
-            }
-            ?>
-
-            <form method="POST" action="">
-                <!-- Inicio Campos -->
-                <h1>&nbsp Item de Contrato</h1>
+            <form method="POST">
+                <h1>Validar Pagamento</h1>
                 <div class="row">
-                    <!-- Select Contrato -->
-                    <div class="col-md-3">
-                        <?php
+                    <?php
+                    $result_passagem =
+                        "SELECT MAX(id_passagem) AS id_passagem 
+                                LEFT JOIN tbl_pessoa
+                                ON tbl_passagem.id_pessoa = tbl_pessoa.id_pessoa
+                                LEFT JOIN tbl_item
+                                ON tbl_passagem.id_item = tbl_item.id_item
 
-                        $result_contrato = "SELECT * FROM tbl_contrato
-                                                        WHERE status_contrato LIKE 'vigente'
-                                                        ORDER BY id_contrato";
+                    $resultado_passagem = $conn->prepare($result_passagem);
+                    $resultado_passagem->execute();
+                    echo '
 
-                        $resultado_contrato = $conn->prepare($result_contrato);
-                        $resultado_contrato->execute();
+                            <table>
+                                <tr>
+                                    <th>Passagem</th>
+                                    <th>&nbsp &nbspPassageiro</th>
+                                    <th>Tarifa R$</th>
+                                    <th>&nbsp Localizador</th>
+                                    <th>Taxa R$</th>
+                                    <th>Desconto R$</th>
+                                </tr>';
+
+                    while ($row_passagem = $resultado_passagem->fetch(PDO::FETCH_ASSOC)) {
+                        $tarifa = $row_passagem['tarifa_voucher'];
+                        $taxas = $row_passagem['taxas_voucher'];
+                        $devalor = $row_passagem['desconto_valor'];
+                        $comvalor = $row_passagem['comissao_valor'];
+                        $desper = $row_passagem['desconto_percentual'];
+                        $comper = $row_passagem['comissao_percentual'];
 
 
+                        echo '
+                                <tr>
+                                <td style="text-align: center">' . $idviagem . '</td>
+                                    <td name="nome_completo">&nbsp &nbsp ' . $row_passagem['nome_completo'] . '</td>
+                                    <td style="text-align: center" name="localizador">' . $row_passagem['localizador'] . '</td>
+                                    <td style="text-align: center" name="tarifa_voucher">' . $row_passagem['tarifa_voucher'] . '</td>
+                                    <td style="text-align: center" name="taxas_voucher">' . $row_passagem['taxas_voucher'] . '</td>
+                                    <td style="text-align: center" name="desconto_valor">' . $row_passagem['desconto_valor'] . '</td>
+                                    
+                                </tr>   
+                                </table>';
+                    }
+                    //valor Apurado  
+                    $trftx = $tarifa + $taxas;
+                    $comissaperc = (($trftx  * $comper) / 100) + $trftx;
+                    $descperc = $comissaperc - (($comissaperc *  $desper) / 100);
+                    $comisvalor = $descperc + $comvalor;
+                    $vlrapurado = $comisvalor - $devalor;
 
-                        echo '<label id="date-side" for="contrato">Contrato</label><select class="custom-select" name="id_contrato" id="id_contrato">
-                                        <option value="id_contrato" disabled">Selecione</option>';
+                    //valor Glosa
 
-                        while ($row_contrato = $resultado_contrato->fetch(PDO::FETCH_ASSOC)) {
-                            echo '<option selected="selected value="' . $row_contrato['id_contrato'] . '">' . $row_contrato['num_contrato'] . '</option>';
-                        }
-                        echo '</select>';
-                        ?>
-                    </div>
-                    <div class="col-md-6">
-                        <label id="date-side" for="descricao">Descrição</label>
-                        <select class="custom-select" name="descricao" id="inlineFormCustomSelectPref"
-                            required="required">
-                            <option selected disabled>Selecione</option>
-                            <option name="descricao" value="Passagem Aérea Nacional">Passagem Aérea Nacional</option>
-                            <option name="descricao" value="Passagem Aérea Internacional">Passagem Aérea Internacional
-                            </option>
-                            <option name="descricao" value="Passagem Rodoviária Nacional">Passagem Rodoviária Nacional
-                            </option>
-                            <option name="descricao" value="Seguro Viagem Internacional">Seguro Viagem Internacional
-                            </option>
-
-                        </select>
-                    </div>
-
-                    <div class="col-md-3 ">
-                        <label id="date-side" for="valor_contratado">Valor Total</label>
-                        <input type="text" min="" step="any" class="form-control" name="valor_contratado"
-                            id="valor_contratado" placeholder="0.00" required="required">
-                    </div>
-
+                    $vrlglosa = $totalfatura - $vlrapurado;
+                    if ($vrlglosa < 0.05) {
+                        $vrlglosa = 0;
+                    }
+                    ?>
                 </div>
-                <div class="row">
-
-                    <div class="col-md-3 ">
-                        <label id="date-side">Desconto em Valor Monetário R$</label>
-                        <input type="text" min="" step="any" class="form-control" name="desconto_valor"
-                            id="desconto_valor" placeholder="0.00" required="required">
-                    </div>
-
-                    <div class="col-md-3 ">
-                        <label id="date-side">Desconto em Percentual %</label>
-                        <input type="text" min="" max="100" step="any" class="form-control" name="desconto_percentual"
-                            id="desconto_percentual" placeholder="0.00" required="required">
-                    </div>
-                    <div class="col-md-3 ">
-                        <label id="date-side">Comissão em Valor Monetário R$</label>
-                        <input type="text" min="" step="any" class="form-control" name="comissao_valor"
-                            id="comissao_valor" placeholder="0.00" required="required">
-                    </div>
-
-                    <div class="col-md-3 ">
-                        <label id="date-side">Comissão em Percentual %</label>
-                        <input type="text" min="" max="100" step="any" class="form-control" name="comissao_percentual"
-                            id="comissao_percentual" placeholder="0.00" required="required">
-                    </div>
-                </div>
-
-                <div class="row">
-                    <div class="col-md-4">
-                        <input type="submit" onclick="return checkSubmission()" id="btnCadItem" value="Salvar"
-                            name="btnCadItem"></input>
-                    </div>
-
-                    <div class="col-md-4">
-                        <input type="submit" name="btnCancela" id="btnCancela" value="Cancelar"></input>
-                    </div>
-
-                    <div class="col-md-4">
-                        <input type="submit" id="btnConcluir" value="Concluir"></input>
-                    </div>
-
-                </div>
-                <input type="hidden" class="form-control" name="status_item" id="status_item" value="ativo">
-                <!-- Fim Campos -->
-            </form>
-
-        </div>
-        </div>
         </div>
     </section>
     <footer>
-        <div class="footer">©️ Tribunal de Justiça do Estado do Paraná - Sistema de Controle de Passagens
+        <div class=" footer">©️ Tribunal de Justiça do Estado do Paraná - Sistema de Controle de Passagens
         </div>
     </footer>
-    <!-- Verificar se o ja aconteceu um 'submit' -->
-    <script>
-    var submissionflag = false;
-
-    function checkSubmission() {
-        if (!submissionflag) {
-            submissionflag = true;
-            document.getElementById("btnsave").disabled = true;
-            return true;
-        } else {
-            return false;
-        }
-    }
-    </script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
-        integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous">
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
-    </script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
-        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous">
-    </script>
-    <script src="assets/css/bootstrap.min.css"></script>
-    <script src="assets/js/jquery.mask.min.js"></script>
 </body>
 
 </html>

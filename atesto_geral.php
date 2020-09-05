@@ -5,66 +5,59 @@ ob_start();
 
 include_once 'conexao.php';
 
-$btnCadItem = filter_input(INPUT_POST, 'btnCadItem', FILTER_SANITIZE_STRING);
+$resultultimo = "SELECT MAX(id_pagamento) AS id_pagamento FROM tbl_pagamento INNER JOIN tbl_passagem
+    ON tbl_pagamento.id_passagem = tbl_passagem.id_passagem";
+$resultado_ultimo = $conn->prepare($resultultimo);
+$resultado_ultimo->execute();
+while ($row_pagamento = $resultado_ultimo->fetch(PDO::FETCH_ASSOC)) {
 
-if ($btnCadItem) {
-
-    $dados = filter_input_array(INPUT_POST, FILTER_DEFAULT);
-
-    if (empty($dados['desconto_valor'])) {
-        $dados['desconto_valor'] = 0.00;
-    }
-    if (empty($dados['comissao_valor'])) {
-        $dados['comissao_valor'] = 0.00;
-    }
-    if (empty($dados['desconto_percentual'])) {
-        $dados['desconto_percentual'] = 0.00;
-    }
-    if (empty($dados['comissao_percentual'])) {
-        $dados['comissao_percentual'] = 0.00;
-    }
-
-
-    $result_item = "INSERT INTO tbl_item (id_contrato, descricao, valor_contratado, desconto_valor, comissao_valor, desconto_percentual, comissao_percentual, status_item) VALUES (
-		'" . $dados['id_contrato'] . "',
-		'" . $dados['descricao'] . "',
-		'" . $dados['valor_contratado'] . "',
-		'" . $dados['desconto_valor'] . "',
-		'" . $dados['comissao_valor'] . "',
-        '" . $dados['desconto_percentual'] . "',
-        '" . $dados['comissao_percentual'] . "',
-        '" . $dados['status_item'] . "'
-		)";
-
-
-    $resultado_item = $conn->prepare($result_item);
-    $resultado_item->execute();
-
-    header("Location: caditem.php");
-
-    /*if(pg_insert($conn)){
-			$_SESSION['msgcad'] = "Item cadastrado com sucesso";
-			header("Location: caditem.php");
-		}else{
-			$_SESSION['msg'] = "Contrato já cadastrado";
-			var_dump($conn);
-            header("Location: caditem.php"); */
+    $ultimo = $row_pagamento['id_pagamento'];
 }
 
+$btnCadPagamento = filter_input(INPUT_POST, 'btnCadPagamento', FILTER_SANITIZE_STRING);
+$btnConcluir = filter_input(INPUT_POST, 'btnConcluir', FILTER_SANITIZE_STRING);
 
+if ($btnCadPagamento) {
+    header("Location: cadpagamento.php");
+}
+if ($btnConcluir) {
+    header("Location: menu.php");
+}
+
+$result_passagem =
+    "SELECT * FROM tbl_pagamento
+                                    INNER JOIN tbl_passagem
+                                    ON tbl_pagamento.id_passagem = tbl_passagem.id_passagem
+                                    INNER JOIN tbl_viagem
+                                    On tbl_passagem.id_viagem = tbl_viagem.id_viagem
+                                    INNER JOIN tbl_contrato
+                                    ON tbl_passagem.id_contrato = tbl_contrato.id_contrato
+                                    WHERE tbl_pagamento.id_pagamento = $ultimo";
+
+$resultado_passagem = $conn->prepare($result_passagem);
+$resultado_passagem->execute();
+$resultado_passagem->execute();
+while ($row_passagem = $resultado_passagem->fetch(PDO::FETCH_ASSOC)) {
+    $notafiscal = $row_passagem['nota_fiscal'];
+    $fatura = $row_passagem['fatura'];
+    $protocolocompra = $row_passagem['protocolo_compra'];
+    $grau = $row_passagem['grau'];
+    $numcontrato = $row_passagem['num_contrato'];
+    $empresa = $row_passagem['contratada'];
+}
 
 ?>
-
 <!DOCTYPE html>
-<html lang="pt-br">
+<html lang="en">
 
 <head>
-    <meta charset="utf-8">
-    <title>Cadastro de Itens</title>
-    <link rel="shortcut icon" href="assets/img/icon.png" type="image/png">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Atesto</title>
 
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/css/bootstrap.min.css"
-        integrity="sha384-9aIt2nRpC12Uk9gS9baDl411NQApFmC26EwAOH8WgZl5MYYxFfc+NcPb1dKGj7Sk" crossorigin="anonymous">
+    <link rel="shortcut icon" href="assets/img/icon.png" type="image/png">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css"
+        integrity="sha384-JcKb8q3iqJ61gNV9KGb8thSsNjpSL0n8PARn9HuZOnIxN0hoP+VmmDGMN5t9UJ0Z" crossorigin="anonymous">
     <link rel="stylesheet" href="assets/css/style.css">
     <link rel="stylesheet" href="assets/css/sidebar.css">
     <link rel="stylesheet" href="assets/plugins/fontawesome/css/all.min.css">
@@ -235,140 +228,75 @@ if ($btnCadItem) {
     </header>
     <section class="col-md-auto">
         <div class="content-center" id="conteiner">
-            <?php
-            if (isset($_SESSION['msg'])) {
-                echo $_SESSION['msg'];
-                unset($_SESSION['msg']);
-            }
-            ?>
-
-            <form method="POST" action="">
-                <!-- Inicio Campos -->
-                <h1>&nbsp Item de Contrato</h1>
+            <div style="text-align: center">
+                <b>ATESTO DE RECEBIMENTO</b><br><br><br>
+            </div>
+            <div style="text-align: justify; margin: 0 3rem 0 3rem">
+                <b>I.</b> Pelo presente termo, atesta-se que os serviços constantes da nota fiscal eletrônica n.º <b>
+                    <?= $notafiscal; ?> </b>e fatura n.º <b> <?= $fatura; ?> </b>foram efetuados em proveito do Poder
+                Judiciário Paranaense e em conformidade com solicitação feita por este setor, dentro dos parâmetros e
+                prazos estabelecidos pelo contrato n.º <b><?= $numcontrato; ?></b> com a empresa<b>
+                    <?= $empresa; ?></b>.<br>
+                <b>II.</b> Foi relacionado ao presente o protocolo<b> SEI n.º <?= $protocolocompra; ?></b>, no qual
+                consta o despacho de indicação e de autorização de compra das passagens, bem como as passagens e os
+                respectivos comprovantes de embarque.<br>
+                <b>III.</b> Considerando o disposto na Resolução nº 195, de 03 de junho de 2014, do Conselho Nacional de
+                Justiça, informa-se que esta despesa e feita em favor do<b> <?= $grau; ?> grau de jurisdição</b>.<br>
+                <b>IV.</b> Encaminha-se o presente para a Divisão de Controle de Contratos e Atas de Registro de Preços
+                para devidos fins.<br>
+                Curitiba, data da assinatura eletrônica.
+                <br><br>
+            </div>
+            <div style="text-align: center; text-transform: uppercase">
+                <b><?= $_SESSION['nome_completo']; ?></b>
+            </div>
+            <div style="text-align: center">
+                <?php
+                if ($_SESSION['unidade'] <> 1) {
+                    echo 'Seção de Análise de Requisições<br><br> 
+                            <div style="text-align: left; margin: 0 3rem 0 3rem"> 
+                            <b>I</b> - Visto;<br>
+                            <b>II</b> - De acordo;<br>
+                            <b>III</b> - Encaminhe-se à DP-DCA.<br>
+                            Documento datado e assinado eletronicamente.<br><br>
+                            </div>
+                            <div style="text-align: center">
+                            <b>ESTELA COSTA</></b><br>
+                            Chefe da Divisão de Análise e Gerenciamento de Requisições<br>
+                            Departamento do Patrimônio
+                            </div>';
+                } else {
+                    echo 'Departamento de Comunicação e Cerimonial';
+                }
+                ?>
+            </div>
+            <form method="POST">
                 <div class="row">
-                    <!-- Select Contrato -->
-                    <div class="col-md-3">
-                        <?php
-
-                        $result_contrato = "SELECT * FROM tbl_contrato
-                                                        WHERE status_contrato LIKE 'vigente'
-                                                        ORDER BY id_contrato";
-
-                        $resultado_contrato = $conn->prepare($result_contrato);
-                        $resultado_contrato->execute();
-
-
-
-                        echo '<label id="date-side" for="contrato">Contrato</label><select class="custom-select" name="id_contrato" id="id_contrato">
-                                        <option value="id_contrato" disabled">Selecione</option>';
-
-                        while ($row_contrato = $resultado_contrato->fetch(PDO::FETCH_ASSOC)) {
-                            echo '<option selected="selected value="' . $row_contrato['id_contrato'] . '">' . $row_contrato['num_contrato'] . '</option>';
-                        }
-                        echo '</select>';
-                        ?>
+                    <div class="col-md-6">
+                        <input type="submit" id="btnCadPagamento" name="btnCadPagamento" value="Lançar novo pagamento">
                     </div>
                     <div class="col-md-6">
-                        <label id="date-side" for="descricao">Descrição</label>
-                        <select class="custom-select" name="descricao" id="inlineFormCustomSelectPref"
-                            required="required">
-                            <option selected disabled>Selecione</option>
-                            <option name="descricao" value="Passagem Aérea Nacional">Passagem Aérea Nacional</option>
-                            <option name="descricao" value="Passagem Aérea Internacional">Passagem Aérea Internacional
-                            </option>
-                            <option name="descricao" value="Passagem Rodoviária Nacional">Passagem Rodoviária Nacional
-                            </option>
-                            <option name="descricao" value="Seguro Viagem Internacional">Seguro Viagem Internacional
-                            </option>
-
-                        </select>
-                    </div>
-
-                    <div class="col-md-3 ">
-                        <label id="date-side" for="valor_contratado">Valor Total</label>
-                        <input type="text" min="" step="any" class="form-control" name="valor_contratado"
-                            id="valor_contratado" placeholder="0.00" required="required">
-                    </div>
-
-                </div>
-                <div class="row">
-
-                    <div class="col-md-3 ">
-                        <label id="date-side">Desconto em Valor Monetário R$</label>
-                        <input type="text" min="" step="any" class="form-control" name="desconto_valor"
-                            id="desconto_valor" placeholder="0.00" required="required">
-                    </div>
-
-                    <div class="col-md-3 ">
-                        <label id="date-side">Desconto em Percentual %</label>
-                        <input type="text" min="" max="100" step="any" class="form-control" name="desconto_percentual"
-                            id="desconto_percentual" placeholder="0.00" required="required">
-                    </div>
-                    <div class="col-md-3 ">
-                        <label id="date-side">Comissão em Valor Monetário R$</label>
-                        <input type="text" min="" step="any" class="form-control" name="comissao_valor"
-                            id="comissao_valor" placeholder="0.00" required="required">
-                    </div>
-
-                    <div class="col-md-3 ">
-                        <label id="date-side">Comissão em Percentual %</label>
-                        <input type="text" min="" max="100" step="any" class="form-control" name="comissao_percentual"
-                            id="comissao_percentual" placeholder="0.00" required="required">
+                        <input type="submit" id="btnConcluir" name="btnConcluir" value="Concluir">
                     </div>
                 </div>
-
-                <div class="row">
-                    <div class="col-md-4">
-                        <input type="submit" onclick="return checkSubmission()" id="btnCadItem" value="Salvar"
-                            name="btnCadItem"></input>
-                    </div>
-
-                    <div class="col-md-4">
-                        <input type="submit" name="btnCancela" id="btnCancela" value="Cancelar"></input>
-                    </div>
-
-                    <div class="col-md-4">
-                        <input type="submit" id="btnConcluir" value="Concluir"></input>
-                    </div>
-
-                </div>
-                <input type="hidden" class="form-control" name="status_item" id="status_item" value="ativo">
-                <!-- Fim Campos -->
             </form>
+        </div>
 
-        </div>
-        </div>
-        </div>
     </section>
     <footer>
         <div class="footer">©️ Tribunal de Justiça do Estado do Paraná - Sistema de Controle de Passagens
         </div>
     </footer>
-    <!-- Verificar se o ja aconteceu um 'submit' -->
-    <script>
-    var submissionflag = false;
 
-    function checkSubmission() {
-        if (!submissionflag) {
-            submissionflag = true;
-            document.getElementById("btnsave").disabled = true;
-            return true;
-        } else {
-            return false;
-        }
-    }
-    </script>
     <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous">
     </script>
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-        integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.1/dist/umd/popper.min.js"
+        integrity="sha384-9/reFTGAW83EW2RDu2S0VKaIzap3H66lZH81PoYlFhbGU+6BZp6G7niu735Sk7lN" crossorigin="anonymous">
     </script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.0/js/bootstrap.min.js"
-        integrity="sha384-OgVRvuATP1z7JjHLkuOU7Xw704+h835Lr+6QL9UvYjZE3Ipu6Tp75j7Bh/kR0JKI" crossorigin="anonymous">
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"
+        integrity="sha384-B4gt1jrGC7Jh4AgTPSdUtOBvfO8shuf57BaghqFfPlYxofvL8/KUEfYiJOMMV+rV" crossorigin="anonymous">
     </script>
-    <script src="assets/css/bootstrap.min.css"></script>
-    <script src="assets/js/jquery.mask.min.js"></script>
 </body>
 
 </html>
